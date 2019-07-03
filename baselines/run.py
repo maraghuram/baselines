@@ -247,7 +247,7 @@ def main(args):
         logger.log("Running trained model")
         track_rewards = []
 
-        for _ in tqdm(range(100)):
+        for _ in tqdm(range(10)):
             obs = env.reset()
 
             state = model.initial_state if hasattr(model, 'initial_state') else None
@@ -265,10 +265,9 @@ def main(args):
                 done = done.any() if isinstance(done, np.ndarray) else done
                 if done:
                     print('episode_rew={}'.format(episode_rew))
+                    track_rewards.append(episode_rew)
                     episode_rew = 0
                     obs = env.reset()
-
-            track_rewards.append(episode_rew)
 
         print('Total rewards: %.5f +- %.7f' % (np.mean(track_rewards), np.std(track_rewards)))
 

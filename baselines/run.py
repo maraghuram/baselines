@@ -247,7 +247,7 @@ def main(args):
         logger.log("Running trained model")
         track_rewards = []
 
-        for _ in tqdm(range(10)):
+        for _ in range(100):
             obs = env.reset()
 
             state = model.initial_state if hasattr(model, 'initial_state') else None

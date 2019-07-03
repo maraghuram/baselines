@@ -266,8 +266,7 @@ def main(args):
                 if done:
                     print('episode_rew={}'.format(episode_rew))
                     track_rewards.append(episode_rew)
-                    episode_rew = 0
-                    obs = env.reset()
+                    break
 
         print('Total rewards: %.5f +- %.7f' % (np.mean(track_rewards), np.std(track_rewards)))
 

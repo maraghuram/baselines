@@ -51,7 +51,7 @@ _game_envs['retro'] = {
 }
 
 
-def train(args, extra_args):
+def train(args, extra_args, test=False):
     env_type, env_id = get_env_type(args)
     print('env_type: {}'.format(env_type))
 
@@ -62,7 +62,7 @@ def train(args, extra_args):
     alg_kwargs = get_learn_function_defaults(args.alg, env_type)
     alg_kwargs.update(extra_args)
 
-    env = build_env(args)
+    env = build_env(args, test)
     if args.save_video_interval != 0:
         env = VecVideoRecorder(env, osp.join(logger.get_dir(), "videos"), record_video_trigger=lambda x: x % args.save_video_interval == 0, video_length=args.save_video_length)
 
@@ -95,7 +95,10 @@ def build_env(args):
 
     if env_type in {'atari', 'retro'}:
         if alg == 'deepq':
-            env = make_env(env_id, env_type, seed=seed, wrapper_kwargs={'frame_stack': True, 'clip_rewards': False})
+            if test:
+                env = make_env(env_id, env_type, seed=seed, wrapper_kwargs={'frame_stack': True, 'clip_rewards': False})
+            else:
+                env = make_env(env_id, env_type, seed=seed, wrapper_kwargs={'frame_stack': True})
         elif alg == 'trpo_mpi':
             env = make_env(env_id, env_type, seed=seed)
         else:
@@ -214,7 +217,7 @@ def main(args):
         rank = MPI.COMM_WORLD.Get_rank()
         configure_logger(args.log_path, format_strs=[])
 
-    model, env = train(args, extra_args)
+    model, env = train(args, extra_args, args.test)
 
     if args.save_path is not None and rank == 0:
         save_path = osp.expanduser(args.save_path)

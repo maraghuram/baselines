@@ -6,6 +6,7 @@ import gym
 from collections import defaultdict
 import tensorflow as tf
 import numpy as np
+from tqdm import tqdm
 
 from baselines.common.vec_env import VecFrameStack, VecNormalize, VecEnv
 from baselines.common.vec_env.vec_video_recorder import VecVideoRecorder
@@ -241,6 +242,36 @@ def main(args):
                 print('episode_rew={}'.format(episode_rew))
                 episode_rew = 0
                 obs = env.reset()
+
+    if args.test:
+        logger.log("Running trained model")
+        track_rewards = []
+
+        for _ in tqdm(range(100)):
+            obs = env.reset()
+
+            state = model.initial_state if hasattr(model, 'initial_state') else None
+            dones = np.zeros((1,))
+
+            episode_rew = 0
+            while True:
+                if state is not None:
+                    actions, _, state, _ = model.step(obs, S=state, M=dones)
+                else:
+                    actions, _, _, _ = model.step(obs)
+
+                obs, rew, done, _ = env.step(actions)
+                episode_rew += rew[0] if isinstance(env, VecEnv) else rew
+                env.render()
+                done = done.any() if isinstance(done, np.ndarray) else done
+                if done:
+                    print('episode_rew={}'.format(episode_rew))
+                    episode_rew = 0
+                    obs = env.reset()
+
+            track_rewards.append(episode_rew)
+
+        print('Total rewards: %.5f +- %.7f' % (np.mean(track_rewards), np.std(track_rewards)))
 
     env.close()
 
